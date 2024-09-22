@@ -24,7 +24,7 @@ More details about the code logic, I have included detailed descriptions within 
 > INPUT -> Preprocessed Data  
 OUTPUT -> Resolved_Text  
 
-* Description:
+    Description:
     - This function uses SpaCy with NeuralCoref to identify and resolve coreferences within the text. Coreference 
       resolution is the task of finding all expressions that refer to the same entity in a text. For example, 
       it resolves pronouns like "he," "she," or "it" to their respective nouns.
@@ -33,12 +33,12 @@ OUTPUT -> Resolved_Text
     - It uses `progress_apply` to apply the function with a progress bar, making it easier to track the processing 
       status when working with large datasets.
 
-* Examples:
+    Examples:
     - Given a DataFrame `data` with a column named 'Story Text', applying the function would look like:
       resolve_coreferences(data, 'Story Text')
     - This will replace sentences like "John went to the store. He bought milk." with "John went to the store. John bought milk."
 
-* Usage:
+    Usage:
     - This function is particularly useful in Natural Language Processing tasks where understanding entity relations is 
       critical, such as information extraction, text summarization, or chatbot development.
 
@@ -66,20 +66,60 @@ OUTPUT -> table_1 (story number, name, sentence)
     Usage:
     - This function is useful for text analysis tasks where identifying and extracting information about individuals 
       mentioned in stories is required, such as in narrative analysis, data annotation, or content summarization.
-    """
+    
 
 
 ## Step C
 `def extract_rescuing_phrases`   
 > INPUT -> Table_1, Table_2  
 OUTPUT -> Table_3 (Story ID, Rescuing Verb, Rescuing_phrases-name)  
-*the reason why the first column is set as ‘Story ID’, not ‘story number just like first table_1 is because I followed your instructions on the document
+*the reason why the first column is set as ‘Story ID’, not ‘story number just like first table_1 is because I followed your instructions on the document*
+
+
+    Description:
+    - The function iterates through each row of `table_1`, which contains sentences associated with specific story numbers.
+    - For each row in `table_1`, it identifies the list of rescuing verbs that correspond to the story ID by checking `table_2`.
+    - If a rescuing verb is found in the sentence, a new entry is created in `table_3`, including the story ID, the verb,
+      and the sentence where the verb was found.
+    - This approach helps in identifying sentences that contain specific rescuing actions or verbs relevant to each story.
+
+    Examples:
+    - Given `table_1` with sentences and `table_2` with rescuing verbs, calling:
+      extract_rescuing_phrases(table_1, table_2)
+    - This will return a DataFrame with each rescuing verb matched to its corresponding sentence within the specified story.
+
+    Usage:
+    - This function is useful in extracting and analyzing sentences related to specific actions (rescuing verbs) in narrative texts,
+      making it valuable for research in text analysis, content extraction, and information retrieval.
 
 ## Step D 
 `def find_rescuers`  
 > INPUT -> Table_3  
 OUTPUT -> Table_5  
 *The reason why Table 4 is missing is that, through our discussions, we decided that Table 4, which was mentioned in your instructions, was not necessary for this process. To align with the table formatting in the project instruction file, I did not use the name Table 4 and instead named it Table 5.*
+
+    Description:
+    - The function parses the sentence using SpaCy to find the specified rescue verb and searches for 
+      PERSON entities associated with that verb.
+    - Special handling is applied when the verb is 'recognized,' extracting PERSON entities that appear 
+      after the verb.
+    - For other verbs, it looks for the subject of the verb ('nsubj') and identifies PERSON entities, 
+      including those linked with conjunctions like 'and.'
+    - If no direct subject PERSON entities are found, the function searches for the closest PERSON entity 
+      before the verb as a fallback.
+
+    Examples:
+    - Given a row with the sentence "John and Mary recognized the need to help," and the rescue verb 
+      "recognized," the function would return:
+        [{'Story ID': 1, 'Rescuer': 'John', 'Sentence': 'John and Mary recognized the need to help.', 
+          'Rescue Verb': 'recognized'},
+         {'Story ID': 1, 'Rescuer': 'Mary', 'Sentence': 'John and Mary recognized the need to help.', 
+          'Rescue Verb': 'recognized'}]
+
+    Usage:
+    - This function is particularly useful in identifying key participants in rescuing actions from 
+      narrative texts, aiding in the extraction of information about people involved in specific events.
+
 
 ### Step 1
 * Finding the Verb: The function iterates through each token in the sentence to find the token that matches the rescue_verb provided in the row.
@@ -99,16 +139,17 @@ Split FullName into FirstName and LastName
 > INPUT -> Table_5  
 OUTPUT -> Table_6  
 
-- The function uses SpaCy's NER capabilities to identify entities labeled as "DATE" 
+    Description:
+    - The function uses SpaCy's NER capabilities to identify entities labeled as "DATE" 
       within the provided sentence.
-- Each extracted date entity is parsed using `dateutil.parser` to convert it into 
+    - Each extracted date entity is parsed using `dateutil.parser` to convert it into 
       a datetime object.
-- The function checks if the parsed date falls within the World War II date range 
+    - The function checks if the parsed date falls within the World War II date range 
       (September 1, 1939, to May 9, 1945). If so, the date text is returned.
-- If the date cannot be parsed or does not fall within the defined range, the function 
+    - If the date cannot be parsed or does not fall within the defined range, the function 
       returns None.
 
-- Examples:
+    Examples:
     - extract_rescue_date('On April 15, 1942, the rescue took place.') -> 'April 15, 1942'
     - extract_rescue_date('He was rescued in 1950.') -> None
     - extract_rescue_date('The event happened on July 20.') -> None
@@ -118,12 +159,13 @@ OUTPUT -> Table_6
 > INPUT -> Table_6  
 OUTPUT -> Table_7 
 
-- The function uses SpaCy's NER to identify entities such as dates, organizations, geopolitical entities (GPE), 
+    Description:
+    - The function uses SpaCy's NER to identify entities such as dates, organizations, geopolitical entities (GPE), 
       and nationalities, religions, or political groups (NORP) from the sentence.
-- It fills in relevant information based on context clues and custom rules, such as matching professions and religions.
-- The function uses keyword-based matching for professions and predefined lists to identify specific attributes.
+    - It fills in relevant information based on context clues and custom rules, such as matching professions and religions.
+    - The function uses keyword-based matching for professions and predefined lists to identify specific attributes.
 
-- Examples:
+    Examples:
     - extract_information('Dr. Smith, a Jewish doctor born in Berlin, was 45 years old.') ->
         Series({'Rescuer Profession': 'Doctor', 'Rescuer Birthplace': 'Berlin', 
                 'Rescuer Age': '45 years old', 'Rescuer Birth Date': None, 'Rescuer Religion': 'Jewish', 
